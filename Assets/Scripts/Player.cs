@@ -75,8 +75,7 @@ public class Player : MonoBehaviour
 
         if(!trackingTarget || Vector3.Distance(transform.position, huntPoint) < 10f)
         {
-            Vector2 randomArea = Random.insideUnitCircle * 100;
-            Vector3 newPoint = new Vector3(Mathf.Clamp(transform.position.x + randomArea.x, -GameManager.Instance.SpawnArea.x, GameManager.Instance.SpawnArea.x), transform.position.y, Mathf.Clamp(transform.position.z + randomArea.y, -GameManager.Instance.SpawnArea.y, GameManager.Instance.SpawnArea.y));
+            Vector3 newPoint = RandomNavSphere(transform.position, 100f, -1);
             huntPoint = newPoint;
         }
 
@@ -85,7 +84,6 @@ public class Player : MonoBehaviour
             attackCooldown -= Time.deltaTime / currentStats.attackSpeed;
         }
 
-        //transform.LookAt(target != null ? target.transform.position : huntPoint);
         navMeshAgent.destination = target != null ? target.transform.position : huntPoint;
         Debug.DrawLine(transform.position, navMeshAgent.destination);
 
@@ -144,5 +142,18 @@ public class Player : MonoBehaviour
     private void Die()
     {
         gameObject.SetActive(false);
+    }
+
+    public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
+    {
+        Vector3 randDirection = Random.insideUnitSphere * dist;
+
+        randDirection += origin;
+
+        NavMeshHit navHit;
+
+        NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
+
+        return navHit.position;
     }
 }
