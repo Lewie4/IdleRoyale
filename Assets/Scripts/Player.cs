@@ -61,7 +61,7 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        if(target != null && target.currentStats.health < 0 )
+        if(target != null && target.currentStats.health <= 0 )
         {
             target = null;
             trackingTarget = false;
@@ -73,10 +73,12 @@ public class Player : MonoBehaviour
             inQueue = true;
         }
 
-        if(!trackingTarget || Vector3.Distance(transform.position, huntPoint) < 10f)
+        if(!trackingTarget || Vector3.Distance(transform.position, huntPoint) < 25f)
         {
-            Vector3 newPoint = RandomNavSphere(transform.position, 100f, -1);
+            Vector3 newPoint = RandomNavSphere(GameManager.Instance.Circle.position, 100 * GameManager.Instance.Circle.localScale.x, -1);
             huntPoint = newPoint;
+
+            trackingTarget = true;
         }
 
         if(attackCooldown > 0)
@@ -112,15 +114,18 @@ public class Player : MonoBehaviour
     {
         target = FOV.GetTarget();
         inQueue = false;
-        trackingTarget = true;        
+
+        if (target != null)
+        {
+            trackingTarget = true;
+        }
     }
 
     public bool TakeDamage(Player attacker)
     {
         float damage = Random.Range(attacker.currentStats.damage.x, attacker.currentStats.damage.y);
-        currentStats.health -= damage;
 
-        rend.material.color = Color.Lerp(Color.red, Color.white, currentStats.health / startingStats.health);
+        ChangeHealth(damage);
 
         if (currentStats.health <= 0)
         {
@@ -139,6 +144,19 @@ public class Player : MonoBehaviour
         return false;
     }
 
+    public void Heal(float amount)
+    {
+        ChangeHealth(-amount);
+    }
+
+    private void ChangeHealth(float damage)
+    {
+        currentStats.health -= damage;
+        currentStats.health = Mathf.Clamp(currentStats.health, 0, startingStats.health);
+
+        rend.material.color = Color.Lerp(Color.red, Color.white, currentStats.health / startingStats.health);
+    }
+
     private void Die()
     {
         gameObject.SetActive(false);
@@ -155,5 +173,10 @@ public class Player : MonoBehaviour
         NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
 
         return navHit.position;
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        //RedZone
     }
 }

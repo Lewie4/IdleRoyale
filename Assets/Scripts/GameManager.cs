@@ -14,6 +14,11 @@ public class GameManager : Singleton<GameManager>
         get { return spawnArea;  }
     }
 
+    public Transform Circle
+    {
+        get { return circle; }
+    }
+
     [SerializeField] SimpleCameraController cameraController;
     [SerializeField] GameObject playerPrefab;
     [SerializeField] int playerCount;
@@ -21,6 +26,14 @@ public class GameManager : Singleton<GameManager>
 
     private List<Player> players = new List<Player>();
     [SerializeField] Leaderboard leaderboard;
+
+    [SerializeField] Transform circle;
+    [SerializeField] float circleTime;
+    float circleProgress;
+    Vector3 circleStartPos;
+    Vector3 circleFinalPos;
+    Vector3 circleStartScale;
+    Vector3 circleFinalScale;
 
     private Queue<Player> targetQueue = new Queue<Player>();
 
@@ -32,6 +45,12 @@ public class GameManager : Singleton<GameManager>
             newPlayer.playerName = "Player " + i;
             players.Add(newPlayer);
         }
+
+        circleStartPos = circle.position;
+        circleFinalPos = new Vector3(Random.Range(-spawnArea.x, spawnArea.x), circleStartPos.y, Random.Range(-spawnArea.y, spawnArea.y));
+
+        circleStartScale = circle.localScale;
+        circleFinalScale = new Vector3(circleStartScale.x / 10f, circleStartScale.y, circleStartScale.z / 10f);
     }
 
     private void Update()
@@ -46,6 +65,14 @@ public class GameManager : Singleton<GameManager>
             var player = targetQueue.Dequeue();
             player.GetTarget();
         }
+
+        if (circleProgress < 1)
+        {
+            circleProgress += Time.deltaTime / circleTime;
+            circle.position = Vector3.Lerp(circleStartPos, circleFinalPos, circleProgress);
+            circle.localScale = Vector3.Lerp(circleStartScale, circleFinalScale, circleProgress);
+        }
+
     }
 
     public void RequestTarget(Player player)
